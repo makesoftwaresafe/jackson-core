@@ -166,6 +166,8 @@ Doug Roper (htmldoug@github)
   * Contributed #733: Add `StreamReadCapability.EXACT_FLOATS` to indicate whether parser reports exact
   floating-point values or not
   (2.14.0)
+  * Reported #736: `JsonPointer` quadratic memory use: OOME on deep inputs
+  (2.14.0)
 
 Alexander Eyers-Taylor (aeyerstaylor@github)
   * Reported #510: Fix ArrayIndexOutofBoundsException found by LGTM.com
@@ -192,6 +194,8 @@ Sam Smith (Oracle Security Researcher)
 Philippe Marschall (marschall@github)
   * Requested #480: `SerializableString` value can not directly render to Writer
   (2.10.0)
+  * Contributed #798: Avoid copy when parsing `BigDecimal`
+  (2.14.0)
 
 David Nault (dnault@github)
   * Reported #531: Non-blocking parser reports incorrect locations when fed with
@@ -288,8 +292,17 @@ Vlad Tatavu (vladt@github)
   (2.13.2)
 
 PJ Fanning (pjfanning@github)
+  * Contributed #577: Improve performance of floating-point number parsing
+  (2.14.0)
   * Contributed #744: Limit size of exception message in BigDecimalParser
   (2.13.3)
+  * Contributed #749: Improve performance of writing floating-point numbers
+  (2.14.0)
+  * Contributed #773: Add option to accept non-standard trailing decimal point
+  (2.14.0)
+  * Contributed #774:  Add a feature to allow leading plus sign
+    (`JsonReadFeature.ALLOW_LEADING_PLUS_SIGN_FOR_NUMBERS`)
+  (2.14.0)
 
 Ilya Golovin (ilgo0413@github)
   * Contributed #684: Add "JsonPointer#appendProperty" and "JsonPointer#appendIndex"
@@ -297,6 +310,10 @@ Ilya Golovin (ilgo0413@github)
 
 Nik Everett (nik9000@github)
   * Contributed  #715: Allow TokenFilters to keep empty arrays and objects
+  (2.14.0)
+
+Richard Kwasnicki (Richie94@github)
+  * Contributed #717: Hex capitalization for JsonWriter should be configurable
   (2.14.0)
 
 Illia Ovchynnikov (wingsofovnia@github)
@@ -307,3 +324,14 @@ Illia Ovchynnikov (wingsofovnia@github)
 Evan Galpin (egalpin@github)
   * Contributed #762: Make `JsonPointer` `java.io.Serializable`
   (2.14.0)
+
+Chris Rankin (chrisr3@github)
+  * Requested #768: Jackson bundles are missing OSGi's osgi.serviceloader metadata
+  (2.14.0)
+  * Contributed #822: Declare osgi.serviceloader.registrar requirement as optional
+  (2.14.0)
+
+Przemyslaw Gomulka (pgomulka@github)
+  * Contributed #882: Allow TokenFIlter to skip last elements in arrays
+  (2.14.2)
+

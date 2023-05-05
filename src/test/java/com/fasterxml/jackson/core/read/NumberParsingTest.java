@@ -20,7 +20,9 @@ import com.fasterxml.jackson.core.json.JsonReadFeature;
 public class NumberParsingTest
     extends com.fasterxml.jackson.core.BaseTest
 {
-    private final JsonFactory FACTORY = sharedStreamFactory();
+    protected JsonFactory jsonFactory() {
+        return sharedStreamFactory();
+    }
 
     /*
     /**********************************************************************
@@ -177,6 +179,7 @@ public class NumberParsingTest
     public void testIntParsingWithStrings() throws Exception
     {
         assertEquals(3, NumberInput.parseInt("3"));
+        assertEquals(3, NumberInput.parseInt("+3"));
         assertEquals(0, NumberInput.parseInt("0"));
         assertEquals(-3, NumberInput.parseInt("-3"));
         assertEquals(27, NumberInput.parseInt("27"));
@@ -187,6 +190,48 @@ public class NumberParsingTest
         assertEquals(-9999, NumberInput.parseInt("-9999"));
         assertEquals(Integer.MIN_VALUE, NumberInput.parseInt(""+Integer.MIN_VALUE));
         assertEquals(Integer.MAX_VALUE, NumberInput.parseInt(""+Integer.MAX_VALUE));
+    }
+
+    public void testLongParsingWithStrings() throws Exception
+    {
+        assertEquals(3, NumberInput.parseLong("3"));
+        assertEquals(3, NumberInput.parseLong("+3"));
+        assertEquals(0, NumberInput.parseLong("0"));
+        assertEquals(-3, NumberInput.parseLong("-3"));
+        assertEquals(27, NumberInput.parseLong("27"));
+        assertEquals(-31, NumberInput.parseLong("-31"));
+        assertEquals(271, NumberInput.parseLong("271"));
+        assertEquals(-131, NumberInput.parseLong("-131"));
+        assertEquals(2709, NumberInput.parseLong("2709"));
+        assertEquals(-9999, NumberInput.parseLong("-9999"));
+        assertEquals(Long.MIN_VALUE, NumberInput.parseLong(""+Long.MIN_VALUE));
+        assertEquals(Integer.MIN_VALUE-1, NumberInput.parseLong(""+(Integer.MIN_VALUE-1)));
+        assertEquals(Long.MAX_VALUE, NumberInput.parseLong(""+Long.MAX_VALUE));
+        assertEquals(Integer.MAX_VALUE+1, NumberInput.parseLong(""+(Integer.MAX_VALUE+1)));
+    }
+
+    // Found by oss-fuzzer
+    public void testVeryLongIntRootValue() throws Exception
+    {
+        // For some reason running multiple will tend to hide the issue;
+        // possibly due to re-use of some buffers
+        _testVeryLongIntRootValue(newStreamFactory(), MODE_DATA_INPUT);
+    }
+
+    private void _testVeryLongIntRootValue(JsonFactory jsonF, int mode) throws Exception
+    {
+        StringBuilder sb = new StringBuilder(250);
+        sb.append("-2");
+        for (int i = 0; i < 220; ++i) {
+            sb.append('0');
+        }
+        sb.append(' '); // mostly important for DataInput
+        String DOC = sb.toString();
+
+        try (JsonParser p = createParser(jsonF, mode, DOC)) {
+            assertToken(p.nextToken(), JsonToken.VALUE_NUMBER_INT);
+            assertNotNull(p.getBigIntegerValue());
+        }
     }
 
     /*
@@ -414,7 +459,7 @@ public class NumberParsingTest
           arr[i + 3] = '-';
           arr[i + 4] = '1';
           CharArrayReader r = new CharArrayReader(arr, 0, i+5);
-          JsonParser p = FACTORY.createParser(r);
+          JsonParser p = jsonFactory().createParser(r);
           assertToken(JsonToken.VALUE_NUMBER_FLOAT, p.nextToken());
           p.close();
         }
@@ -431,7 +476,7 @@ public class NumberParsingTest
             arr[i + 3] = '-';
             arr[i + 4] = '1';
             ByteArrayInputStream in = new ByteArrayInputStream(arr, 0, i+5);
-            JsonParser p = FACTORY.createParser(in);
+            JsonParser p = jsonFactory().createParser(in);
             assertToken(JsonToken.VALUE_NUMBER_FLOAT, p.nextToken());
             p.close();
         }
@@ -612,7 +657,7 @@ public class NumberParsingTest
             if (input == 0) {
                 p = createParserUsingStream(DOC, "UTF-8");
             } else {
-                p = FACTORY.createParser(DOC);
+                p = jsonFactory().createParser(DOC);
             }
 
             assertToken(JsonToken.START_ARRAY, p.nextToken());
@@ -671,8 +716,8 @@ public class NumberParsingTest
     private void _testIssue160LongNumbers(JsonFactory f, String doc, boolean useStream) throws Exception
     {
         JsonParser p = useStream
-                ? FACTORY.createParser(doc.getBytes("UTF-8"))
-                        : FACTORY.createParser(doc);
+                ? jsonFactory().createParser(doc.getBytes("UTF-8"))
+                        : jsonFactory().createParser(doc);
         assertToken(JsonToken.VALUE_NUMBER_INT, p.nextToken());
         BigInteger v = p.getBigIntegerValue();
         assertNull(p.nextToken());
@@ -816,11 +861,11 @@ public class NumberParsingTest
         // test out with both Reader and ByteArrayInputStream
         JsonParser p;
 
-        p = FACTORY.createParser(new StringReader(DOC));
+        p = jsonFactory().createParser(new StringReader(DOC));
         _testLongerFloat(p, DOC);
         p.close();
         
-        p = FACTORY.createParser(new ByteArrayInputStream(DOC.getBytes("UTF-8")));
+        p = jsonFactory().createParser(new ByteArrayInputStream(DOC.getBytes("UTF-8")));
         _testLongerFloat(p, DOC);
         p.close();
     }

@@ -452,7 +452,11 @@ public final class TextBuffer
                     if (segLen == 0) { // yup
                         _resultString = (currLen == 0) ? "" : new String(_currentSegment, 0, currLen);
                     } else { // no, need to combine
-                        StringBuilder sb = new StringBuilder(segLen + currLen);
+                        final int builderLen = segLen + currLen;
+                        if (builderLen < 0) {
+                            _reportBufferOverflow(segLen, currLen);
+                        }
+                        StringBuilder sb = new StringBuilder(builderLen);
                         // First stored segments
                         if (_segments != null) {
                             for (int i = 0, len = _segments.size(); i < len; ++i) {
@@ -512,9 +516,25 @@ public final class TextBuffer
      * @return Buffered text value parsed as a {@link Double}, if possible
      *
      * @throws NumberFormatException if contents are not a valid Java number
+     * @deprecated use {@link #contentsAsDouble(boolean)}
      */
+    @Deprecated
     public double contentsAsDouble() throws NumberFormatException {
-        return NumberInput.parseDouble(contentsAsString());
+        return contentsAsDouble(false);
+    }
+
+    /**
+     * Convenience method for converting contents of the buffer
+     * into a Double value.
+     *
+     * @param useFastParser whether to use {@link com.fasterxml.jackson.core.io.doubleparser}
+     * @return Buffered text value parsed as a {@link Double}, if possible
+     *
+     * @throws NumberFormatException if contents are not a valid Java number
+     * @since 2.14
+     */
+    public double contentsAsDouble(final boolean useFastParser) throws NumberFormatException {
+        return NumberInput.parseDouble(contentsAsString(), useFastParser);
     }
 
     /**
@@ -525,9 +545,25 @@ public final class TextBuffer
      *
      * @throws NumberFormatException if contents are not a valid Java number
      * @since 2.14
+     * @deprecated use {@link #contentsAsFloat(boolean)}
      */
+    @Deprecated
     public float contentsAsFloat() throws NumberFormatException {
-        return NumberInput.parseFloat(contentsAsString());
+        return contentsAsFloat(false);
+    }
+
+    /**
+     * Convenience method for converting contents of the buffer
+     * into a Float value.
+     *
+     * @param useFastParser whether to use {@link com.fasterxml.jackson.core.io.doubleparser}
+     * @return Buffered text value parsed as a {@link Float}, if possible
+     *
+     * @throws NumberFormatException if contents are not a valid Java number
+     * @since 2.14
+     */
+    public float contentsAsFloat(final boolean useFastParser) throws NumberFormatException {
+        return NumberInput.parseFloat(contentsAsString(), useFastParser);
     }
 
     /**
@@ -820,6 +856,9 @@ public final class TextBuffer
         _segments.add(_currentSegment);
         int oldLen = _currentSegment.length;
         _segmentSize += oldLen;
+        if (_segmentSize < 0) {
+            _reportBufferOverflow(_segmentSize - oldLen, oldLen);
+        }
         _currentSize = 0;
 
         // Let's grow segments by 50%
@@ -928,6 +967,9 @@ public final class TextBuffer
         _hasSegments = true;
         _segments.add(curr);
         _segmentSize += curr.length;
+        if (_segmentSize < 0) {
+            _reportBufferOverflow(_segmentSize - curr.length, curr.length);
+        }
         _currentSize = 0;
         int oldLen = curr.length;
         
@@ -961,6 +1003,9 @@ public final class TextBuffer
         // nope, not shared
         int size = size();
         if (size < 1) {
+            if (size < 0) {
+                _reportBufferOverflow(_segmentSize, _currentSize);
+            }
             return NO_CHARS;
         }
         int offset = 0;
@@ -978,4 +1023,10 @@ public final class TextBuffer
     }
 
     private char[] carr(int len) { return new char[len]; }
+
+    private void _reportBufferOverflow(int prev, int curr) {
+        long newSize = (long) prev + (long) curr;
+        throw new IllegalStateException("TextBuffer overrun: size reached ("
+                +newSize+") exceeds maximum of "+Integer.MAX_VALUE);
+    }
 }

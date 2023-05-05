@@ -14,16 +14,65 @@ JSON library.
 === Releases ===
 ------------------------------------------------------------------------
 
-2.14.0 (not yet released)
+2.15.0 (not yet released)
 
+No changes since 2.14
+
+2.14.3 (05-May-2023)
+
+#909: Revert schubfach changes in #854
+ (contributed by @pjfanning)
+#912: Optional padding Base64Variant still throws exception on missing
+  padding character
+ (reported by @Vity01)
+#967: Address performance issue with `BigDecimalParser`
+#990: Backport removal of BigDecimal to BigInt conversion (#987)
+ (contributed by @pjfanning)
+#1004: FastDoubleParser license
+#1012: Got `NegativeArraySizeException` when calling `writeValueAsString()`
+ (reported by @klettier)
+ (fix contributed by @pjfanning)
+
+2.14.2 (28-Jan-2023)
+
+#854: Backport schubfach changes from v2.15#8
+ (contributed by @pjfanning)
+#882: Allow TokenFIlter to skip last elements in arrays
+ (contributed by Przemyslaw G)
+#886: Avoid instance creations in fast parser code
+ (contributed by @pjfanning)
+#890: `FilteringGeneratorDelegate` does not create new `filterContext`
+  if `tokenFilter` is null
+ (contributed by @DemonicTutor)
+
+2.14.1 (21-Nov-2022)
+
+No changes since 2.14.0
+
+2.14.0 (05-Nov-2022)
+
+#478: Provide implementation of async JSON parser fed by `ByteBufferFeeder`
+ (requested by Arjen P)
+ (contributed by @pjfanning)
+#577: Allow use of faster floating-point number parsing with
+  `StreamReadFeature.USE_FAST_DOUBLE_PARSER`
+ (contributed by @wrandelshofer and @pjfanning)
 #684: Add "JsonPointer#appendProperty" and "JsonPointer#appendIndex"
  (contributed by Ilya G)
 #715: Allow TokenFilters to keep empty arrays and objects
  (contributed by Nik E)
+#717: Hex capitalization for JsonWriter should be configurable (add
+  `JsonWriteFeature.WRITE_HEX_UPPER_CASE`)
+ (contributed by Richard K)
 #733: Add `StreamReadCapability.EXACT_FLOATS` to indicate whether parser reports exact
   floating-point values or not
  (contributed Doug R)
+#736: `JsonPointer` quadratic memory use: OOME on deep inputs
+ (reported by Doug R)
 #745: Change minimum Java version to 8
+#749: Allow use of faster floating-point number serialization
+  (`StreamWriteFeature.USE_FAST_DOUBLE_WRITER`)
+ (contributed by @rgiulietti and @pjfanning)
 #751: Remove workaround for old issue with a particular double
  (contributed by @pjfanning)
 #753: Add `NumberInput.parseFloat()`
@@ -36,6 +85,34 @@ JSON library.
  (contributed by Evan G)
 #763: `JsonFactory.createParser()` with `File` may leak `InputStream`s
 #764: `JsonFactory.createGenerator()` with `File` may leak `OutputStream`s
+#773: Add option to accept non-standard trailing decimal point
+  (`JsonReadFeature.ALLOW_TRAILING_DECIMAL_POINT_FOR_NUMBERS`)
+ (contributed by @pjfanning)
+#774: Add a feature to allow leading plus sign
+  (`JsonReadFeature.ALLOW_LEADING_PLUS_SIGN_FOR_NUMBERS`)
+ (contributed by @pjfanning)
+#788: `JsonPointer.empty()` should NOT indicate match of a property
+  with key of ""
+#798: Avoid copy when parsing `BigDecimal`
+ (contributed by Philippe M)
+#811: Add explicit bounds checks for `JsonGenerator` methods that take
+  `byte[]`/`char[]`/String-with-offsets input
+#812: Add explicit bounds checks for `JsonFactory.createParser()` methods
+  that take `byte[]`/`char[]`-with-offsets input
+#814: Use `BigDecimalParser` for BigInteger parsing very long numbers
+ (contributed by @pjfanning)
+#818: Calling `JsonPointer.compile(...)` on very deeply nested expression
+  throws `StackOverflowError`
+#828: Make `BigInteger` parsing lazy
+ (contributed by @pjfanning)
+#830: Make `BigDecimal` parsing lazy
+ (contributed by @pjfanning)
+#834: ReaderBaseJsonParser._verifyRootSpace() can cause buffer boundary failure
+
+2.13.5 (23-Jan-2023)
+2.13.4 (03-Sep-2022)
+
+No changes since 2.13.3
 
 2.13.3 (14-May-2022)
 
@@ -44,7 +121,7 @@ JSON library.
 
 2.13.2 (06-Mar-2022)
 
-#732: Update Maven wrapper
+0#732: Update Maven wrapper
  (contributed by Andrey S)
 #739: `JsonLocation` in 2.13 only uses identity comparison for "content reference"
  (reported by Vlad T)

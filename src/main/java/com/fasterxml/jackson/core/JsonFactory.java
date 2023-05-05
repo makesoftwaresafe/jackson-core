@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.format.InputAccessor;
 import com.fasterxml.jackson.core.format.MatchStrength;
 import com.fasterxml.jackson.core.io.*;
 import com.fasterxml.jackson.core.json.*;
+import com.fasterxml.jackson.core.json.async.NonBlockingByteBufferJsonParser;
 import com.fasterxml.jackson.core.json.async.NonBlockingJsonParser;
 import com.fasterxml.jackson.core.sym.ByteQuadsCanonicalizer;
 import com.fasterxml.jackson.core.sym.CharsToNameCanonicalizer;
@@ -1134,6 +1135,7 @@ public class JsonFactory
      */
     @Override
     public JsonParser createParser(byte[] data, int offset, int len) throws IOException, JsonParseException {
+        _checkRangeBoundsForByteArray(data, offset, len);
         IOContext ctxt = _createContext(_createContentReference(data, offset, len), true);
         // [JACKSON-512]: allow wrapping with InputDecorator
         if (_inputDecorator != null) {
@@ -1184,6 +1186,7 @@ public class JsonFactory
      */
     @Override
     public JsonParser createParser(char[] content, int offset, int len) throws IOException {
+        _checkRangeBoundsForCharArray(content, offset, len);
         if (_inputDecorator != null) { // easier to just wrap in a Reader than extend InputDecorator
             return createParser(new CharArrayReader(content, offset, len));
         }
@@ -1239,6 +1242,33 @@ public class JsonFactory
         IOContext ctxt = _createNonBlockingContext(null);
         ByteQuadsCanonicalizer can = _byteSymbolCanonicalizer.makeChild(_factoryFeatures);
         return new NonBlockingJsonParser(ctxt, _parserFeatures, can);
+    }
+
+    /**
+     * Optional method for constructing parser for non-blocking parsing
+     * via {@link com.fasterxml.jackson.core.async.ByteBufferFeeder}
+     * interface (accessed using {@link JsonParser#getNonBlockingInputFeeder()}
+     * from constructed instance).
+     *<p>
+     * If this factory does not support non-blocking parsing (either at all,
+     * or from byte array),
+     * will throw {@link UnsupportedOperationException}.
+     *<p>
+     * Note that JSON-backed factory only supports parsing of UTF-8 encoded JSON content
+     * (and US-ASCII since it is proper subset); other encodings are not supported
+     * at this point.
+     *
+     * @since 2.14
+     */
+    @Override
+    public JsonParser createNonBlockingByteBufferParser() throws IOException
+    {
+        // 17-May-2017, tatu: Need to take care not to accidentally create JSON parser
+        //   for non-JSON input:
+        _requireJSONFactory("Non-blocking source not (yet?) supported for this format (%s)");
+        IOContext ctxt = _createNonBlockingContext(null);
+        ByteQuadsCanonicalizer can = _byteSymbolCanonicalizer.makeChild(_factoryFeatures);
+        return new NonBlockingByteBufferJsonParser(ctxt, _parserFeatures, can);
     }
 
     /*

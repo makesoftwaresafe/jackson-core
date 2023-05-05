@@ -29,7 +29,8 @@ public class UTF8JsonGenerator
     // intermediate copies only made up to certain length...
     private final static int MAX_BYTES_TO_BUFFER = 512;
 
-    private final static byte[] HEX_CHARS = CharTypes.copyHexBytes();
+    private final static byte[] HEX_BYTES_UPPER = CharTypes.copyHexBytes(true);
+    private final static byte[] HEX_BYTES_LOWER = CharTypes.copyHexBytes(false);
 
     private final static byte[] NULL_BYTES = { 'n', 'u', 'l', 'l' };
     private final static byte[] TRUE_BYTES = { 't', 'r', 'u', 'e' };
@@ -615,14 +616,15 @@ public class UTF8JsonGenerator
     }
     
     @Override
-    public void writeRawUTF8String(byte[] text, int offset, int length) throws IOException
+    public void writeRawUTF8String(byte[] text, int offset, int len) throws IOException
     {
+        _checkRangeBoundsForByteArray(text, offset, len);
         _verifyValueWrite(WRITE_STRING);
         if (_outputTail >= _outputEnd) {
             _flushBuffer();
         }
         _outputBuffer[_outputTail++] = _quoteChar;
-        _writeBytes(text, offset, length);
+        _writeBytes(text, offset, len);
         if (_outputTail >= _outputEnd) {
             _flushBuffer();
         }
@@ -632,6 +634,7 @@ public class UTF8JsonGenerator
     @Override
     public void writeUTF8String(byte[] text, int offset, int len) throws IOException
     {
+        _checkRangeBoundsForByteArray(text, offset, len);
         _verifyValueWrite(WRITE_STRING);
         if (_outputTail >= _outputEnd) {
             _flushBuffer();
@@ -670,9 +673,10 @@ public class UTF8JsonGenerator
     @Override
     public void writeRaw(String text, int offset, int len) throws IOException
     {
+        _checkRangeBoundsForString(text, offset, len);
+
         final char[] buf = _charBuffer;
         final int cbufLen = buf.length;
-
         // minor optimization: see if we can just get and copy
         if (len <= cbufLen) {
             text.getChars(offset, offset+len, buf, 0);
@@ -738,6 +742,8 @@ public class UTF8JsonGenerator
     @Override
     public final void writeRaw(char[] cbuf, int offset, int len) throws IOException
     {
+        _checkRangeBoundsForCharArray(cbuf, offset, len);
+
         // First: if we have 3 x charCount spaces, we know it'll fit just fine
         {
             int len3 = len+len+len;
@@ -879,6 +885,8 @@ public class UTF8JsonGenerator
             byte[] data, int offset, int len)
         throws IOException, JsonGenerationException
     {
+        _checkRangeBoundsForByteArray(data, offset, len);
+
         _verifyValueWrite(WRITE_BINARY);
         // Starting quotes
         if (_outputTail >= _outputEnd) {
@@ -1027,12 +1035,12 @@ public class UTF8JsonGenerator
         if (_cfgNumbersAsStrings ||
             (NumberOutput.notFinite(d)
                 && Feature.QUOTE_NON_NUMERIC_NUMBERS.enabledIn(_features))) {
-            writeString(String.valueOf(d));
+            writeString(NumberOutput.toString(d, isEnabled(Feature.USE_FAST_DOUBLE_WRITER)));
             return;
         }
         // What is the max length for doubles? 40 chars?
         _verifyValueWrite(WRITE_NUMBER);
-        writeRaw(String.valueOf(d));
+        writeRaw(NumberOutput.toString(d, isEnabled(Feature.USE_FAST_DOUBLE_WRITER)));
     }
 
     @SuppressWarnings("deprecation")
@@ -1042,12 +1050,12 @@ public class UTF8JsonGenerator
         if (_cfgNumbersAsStrings ||
             (NumberOutput.notFinite(f)
                 && Feature.QUOTE_NON_NUMERIC_NUMBERS.enabledIn(_features))) {
-            writeString(String.valueOf(f));
+            writeString(NumberOutput.toString(f, isEnabled(Feature.USE_FAST_DOUBLE_WRITER)));
             return;
         }
         // What is the max length for floats?
         _verifyValueWrite(WRITE_NUMBER);
-        writeRaw(String.valueOf(f));
+        writeRaw(NumberOutput.toString(f, isEnabled(Feature.USE_FAST_DOUBLE_WRITER)));
     }
 
     @Override
@@ -2129,6 +2137,7 @@ public class UTF8JsonGenerator
      */
     private final int _outputMultiByteChar(int ch, int outputPtr) throws IOException
     {
+        byte[] HEX_CHARS = getHexBytes();
         byte[] bbuf = _outputBuffer;
         if (ch >= SURR1_FIRST && ch <= SURR2_LAST) { // yes, outside of BMP; add an escape
             // 23-Nov-2015, tatu: As per [core#223], may or may not want escapes;
@@ -2168,6 +2177,7 @@ public class UTF8JsonGenerator
     private int _writeGenericEscape(int charToEscape, int outputPtr) throws IOException
     {
         final byte[] bbuf = _outputBuffer;
+        byte[] HEX_CHARS = getHexBytes();
         bbuf[outputPtr++] = BYTE_BACKSLASH;
         bbuf[outputPtr++] = BYTE_u;
         if (charToEscape > 0xFF) {
@@ -2193,4 +2203,9 @@ public class UTF8JsonGenerator
             _outputStream.write(_outputBuffer, 0, len);
         }
     }
+
+    private byte[] getHexBytes() {
+        return _cfgWriteHexUppercase ? HEX_BYTES_UPPER : HEX_BYTES_LOWER;
+    }
 }
+

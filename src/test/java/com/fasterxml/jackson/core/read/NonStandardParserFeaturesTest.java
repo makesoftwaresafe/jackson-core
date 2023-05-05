@@ -20,10 +20,11 @@ public class NonStandardParserFeaturesTest
 
     public void testNonStandardAnyCharQuoting() throws Exception
     {
-        _testNonStandarBackslashQuoting(MODE_INPUT_STREAM);
-        _testNonStandarBackslashQuoting(MODE_INPUT_STREAM_THROTTLED);
-        _testNonStandarBackslashQuoting(MODE_DATA_INPUT);
-        _testNonStandarBackslashQuoting(MODE_READER);
+        _testNonStandardBackslashQuoting(MODE_INPUT_STREAM);
+        _testNonStandardBackslashQuoting(MODE_INPUT_STREAM_THROTTLED);
+        _testNonStandardBackslashQuoting(MODE_DATA_INPUT);
+        _testNonStandardBackslashQuoting(MODE_READER);
+        _testNonStandardBackslashQuoting(MODE_READER_THROTTLED);
     }
 
     public void testLeadingZeroesUTF8() throws Exception {
@@ -40,6 +41,8 @@ public class NonStandardParserFeaturesTest
     public void testLeadingZeroesReader() throws Exception {
         _testLeadingZeroes(MODE_READER, false);
         _testLeadingZeroes(MODE_READER, true);
+        _testLeadingZeroes(MODE_READER_THROTTLED, false);
+        _testLeadingZeroes(MODE_READER_THROTTLED, true);
     }
 
     // allow NaN
@@ -48,6 +51,7 @@ public class NonStandardParserFeaturesTest
         _testAllowNaN(MODE_INPUT_STREAM_THROTTLED);
         _testAllowNaN(MODE_DATA_INPUT);
         _testAllowNaN(MODE_READER);
+        _testAllowNaN(MODE_READER_THROTTLED);
     }
 
     // allow +Inf/-Inf
@@ -56,6 +60,7 @@ public class NonStandardParserFeaturesTest
         _testAllowInf(MODE_INPUT_STREAM_THROTTLED);
         _testAllowInf(MODE_DATA_INPUT);
         _testAllowInf(MODE_READER);
+        _testAllowInf(MODE_READER_THROTTLED);
     }
 
     /*
@@ -64,10 +69,10 @@ public class NonStandardParserFeaturesTest
     /****************************************************************
      */
 
-    private void _testNonStandarBackslashQuoting(int mode) throws Exception
+    private void _testNonStandardBackslashQuoting(int mode) throws Exception
     {
         // first: verify that we get an exception
-        final String JSON = quote("\\'");
+        final String JSON = q("\\'");
         JsonParser p = createParser(STD_F, mode, JSON);
         try {      
             p.nextToken();
